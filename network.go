@@ -120,7 +120,7 @@ func makeRequest(method, description, urlStr string, payload map[string]interfac
 
 	// Check for non-2xx status codes
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("received non-2xx response code: %d, response:%v", resp.StatusCode, responseBody)
+		return responseBody, fmt.Errorf("received non-2xx response code: %d, response:%v", resp.StatusCode, nil)
 	}
 
 	return responseBody, nil
