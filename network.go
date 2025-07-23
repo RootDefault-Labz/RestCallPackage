@@ -104,8 +104,9 @@ func makeRequestWithString(method, description, urlStr string, payload string, h
 	var body io.Reader
 	var payloadStr string
 	if !isQueryParamMethod && payload != "" {
-		body = bytes.NewBuffer([]byte(payload))
-		payloadStr = payload
+		quotedPayload := "\"" + payload + "\""
+		body = bytes.NewBuffer([]byte(quotedPayload))
+		payloadStr = quotedPayload
 	}
 
 	return executeRequest(method, description, u.String(), body, payloadStr, headers)
