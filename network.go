@@ -88,8 +88,33 @@ func makeRequest(method, description, urlStr string, payload map[string]interfac
 		payloadStr = string(jsonPayload)
 	}
 
+	return executeRequest(method, description, u.String(), body, payloadStr, headers)
+}
+
+// Add a string payload variant
+func makeRequestWithString(method, description, urlStr string, payload string, headers map[string]string) (string, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return "", err
+	}
+
+	// Methods that typically don't have a request body should use query parameters
+	isQueryParamMethod := method == methodGET || method == methodDELETE || method == methodHEAD || method == methodOPTIONS
+
+	var body io.Reader
+	var payloadStr string
+	if !isQueryParamMethod && payload != "" {
+		body = bytes.NewBuffer([]byte(payload))
+		payloadStr = payload
+	}
+
+	return executeRequest(method, description, u.String(), body, payloadStr, headers)
+}
+
+// Common request execution logic
+func executeRequest(method, description, urlStr string, body io.Reader, payloadStr string, headers map[string]string) (string, error) {
 	// Create the request
-	req, err := http.NewRequest(method, u.String(), body)
+	req, err := http.NewRequest(method, urlStr, body)
 	if err != nil {
 		return "", err
 	}
@@ -100,7 +125,7 @@ func makeRequest(method, description, urlStr string, payload map[string]interfac
 	}
 
 	// Log the request details
-	logRequest(method, u.String(), description, headers, payloadStr)
+	logRequest(method, urlStr, description, headers, payloadStr)
 
 	// Perform the request
 	resp, err := httpClient.Do(req)
@@ -139,8 +164,16 @@ func MakePOSTRequest(description, url string, payload map[string]interface{}, he
 	return makeRequest(methodPOST, description, url, payload, headers)
 }
 
+func MakePOSTRequestWithString(description, url string, payload string, headers map[string]string) (string, error) {
+	return makeRequestWithString(methodPOST, description, url, payload, headers)
+}
+
 func MakePUTRequest(description, url string, payload map[string]interface{}, headers map[string]string) (string, error) {
 	return makeRequest(methodPUT, description, url, payload, headers)
+}
+
+func MakePUTRequestWithString(description, url string, payload string, headers map[string]string) (string, error) {
+	return makeRequestWithString(methodPUT, description, url, payload, headers)
 }
 
 func MakeDELETERequest(description, url string, queryParams map[string]string, headers map[string]string) (string, error) {
@@ -153,6 +186,10 @@ func MakeDELETERequest(description, url string, queryParams map[string]string, h
 
 func MakePATCHRequest(description, url string, payload map[string]interface{}, headers map[string]string) (string, error) {
 	return makeRequest(methodPATCH, description, url, payload, headers)
+}
+
+func MakePATCHRequestWithString(description, url string, payload string, headers map[string]string) (string, error) {
+	return makeRequestWithString(methodPATCH, description, url, payload, headers)
 }
 
 func MakeHEADRequest(description, url string, queryParams map[string]string, headers map[string]string) (string, error) {
